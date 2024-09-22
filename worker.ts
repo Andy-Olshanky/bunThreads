@@ -1,5 +1,4 @@
 self.onmessage = (message) => {
-    console.log("Worker received message!");
     const trials = message.data;
     let sum = 0;
 

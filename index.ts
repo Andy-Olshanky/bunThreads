@@ -1,32 +1,51 @@
 console.log("Hello via Bun!");
 
-const numWorkers = 8;
-const numTrials = 10000000000;
-const trialsPerWorker = Math.floor(numTrials / numWorkers);
-
-const start = performance.now();
-
-const workers = [];
-for (let i = 0; i < numWorkers; i++) {
-    console.log("Creating worker!", i);
-    const worker = new Worker('./worker.ts');
-    workers.push(worker);
+function runSingleThreaded(numTrials: number) {
+    let sum = 0;
+    const start = performance.now();
+    for (let i = 0; i < numTrials; i++) {
+        sum++;
+    }
+    const end = performance.now();
+    console.log(`${numTrials} single-threaded trials took ${end - start}ms`);
 }
 
-let completedWorkers = 0;
-let totalSum = 0;
+function runMultiThreaded(numTrials: number, numWorkers: number) {
+    const trialsPerWorker = Math.floor(numTrials / numWorkers);
+    const workers = [];
+    let completedWorkers = 0;
+    let totalSum = 0;
 
-for (const worker of workers) {
-    worker.postMessage(trialsPerWorker);
+    const start = performance.now();
+    for (let i = 0; i < numWorkers; i++) {
+        const worker = new Worker('./worker.ts');
+        workers.push(worker);
+    }
 
-    worker.onmessage = (message) => {
-        totalSum += message.data;
-        completedWorkers++;
+    for (const worker of workers) {
+        worker.postMessage(trialsPerWorker);
 
-        if (completedWorkers === numWorkers) {
-            const end = performance.now();
-            console.log(`Trials: ${numTrials}, Sum: ${totalSum}, Time: ${end - start}ms`);
-            process.exit(0);
+        worker.onmessage = (message) => {
+            totalSum += message.data;
+            completedWorkers++;
+
+            if (completedWorkers === numWorkers) {
+                const end = performance.now();
+                console.log(`${numTrials} single-threaded trials took ${end - start}ms`);
+                process.exit(0);
+            }
         }
+    }
+}
+
+if (Bun.argv.length > 2) {
+    const arg = Bun.argv[2];
+    const numTrials = 1000000000;
+    const numWorkers = 8;
+
+    if (arg === "single" || arg === "0") {
+        runSingleThreaded(numTrials);
+    } else if (arg === "multi" || arg === "1") {
+        runMultiThreaded(numTrials, numWorkers);
     }
 }
