@@ -1,5 +1,7 @@
 # bunthreads
 
+Learning to multithread in bun
+
 To install dependencies:
 
 ```bash
