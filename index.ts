@@ -42,7 +42,7 @@ function runMultiThreaded(numTrials: number, numWorkers: number, randomAmount: n
 async function main() {
     if (Bun.argv.length > 2) {
     const arg = Bun.argv[2];
-    const numTrials = 100000;
+    const numTrials = 1000;
     const numWorkers = 32;
     const randomAmount = 10000000;
 
