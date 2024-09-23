@@ -1,18 +1,18 @@
 console.log("Hello via Bun!");
 
-function runSingleThreaded(numTrials: number) {
+function runSingleThreaded(numTrials: number, randomAmount: number) {
   const start = performance.now();
   for (let i = 0; i < numTrials; i++) {
     let num = 5;
     while (num !== 0) {
-      num = Math.floor(Math.random() * 1000);
+      num = Math.floor(Math.random() * randomAmount);
     }
   }
   const end = performance.now();
   console.log(`${numTrials} single-threaded trials took ${end - start}ms`);
 }
 
-function runMultiThreaded(numTrials: number, numWorkers: number) {
+function runMultiThreaded(numTrials: number, numWorkers: number, randomAmount: number) {
   const start = performance.now();
   const trialsPerWorker = Math.floor(numTrials / numWorkers);
   let completedWorkers = 0;
@@ -24,7 +24,7 @@ function runMultiThreaded(numTrials: number, numWorkers: number) {
         workers.push(worker);
     }
     for (const worker of workers) {
-        worker.postMessage(trialsPerWorker);
+        worker.postMessage({ trialsPerWorker, randomAmount });
 
         worker.onmessage = () => {
             completedWorkers++;
@@ -42,13 +42,14 @@ function runMultiThreaded(numTrials: number, numWorkers: number) {
 async function main() {
     if (Bun.argv.length > 2) {
     const arg = Bun.argv[2];
-    const numTrials = 100000000;
+    const numTrials = 100000;
     const numWorkers = 32;
+    const randomAmount = 10000000;
 
     if (arg === "single" || arg === "0") {
-        runSingleThreaded(numTrials);
+        runSingleThreaded(numTrials, randomAmount);
     } else if (arg === "multi" || arg === "1") {
-        runMultiThreaded(numTrials, numWorkers);
+        runMultiThreaded(numTrials, numWorkers, randomAmount);
     }
   }
 }
